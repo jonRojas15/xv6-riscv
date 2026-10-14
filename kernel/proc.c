@@ -774,3 +774,52 @@ procdump(void)
     printk("\n");
   }
 }
+
+// PA2: Get information about all active processes.
+int
+getprocs(uint64 addr)
+{
+  struct proc *p;
+  struct proc *caller = myproc();
+  struct pstat info;
+  int count = 0;
+
+  // Protect parent pointers while collecting information.
+  acquire(&wait_lock);
+
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+
+    if(p->state != UNUSED){
+      info.pid = p->pid;
+      info.state = p->state;
+      info.size = p->sz;
+
+      if(p->parent != 0)
+        info.ppid = p->parent->pid;
+      else
+        info.ppid = 0;
+
+      safestrcpy(info.name, p->name, sizeof(info.name));
+
+      // Copy process information to user memory.
+      if(copyout(caller->pagetable,
+                 caller->sz,
+                 addr + count * sizeof(struct pstat),
+                 (char *)&info,
+                 sizeof(info)) < 0){
+        release(&p->lock);
+        release(&wait_lock);
+        return -1;
+      }
+
+      count++;
+    }
+
+    release(&p->lock);
+  }
+
+  release(&wait_lock);
+
+  return count;
+}

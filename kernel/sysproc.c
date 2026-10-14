@@ -122,3 +122,16 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// PA2: System call to retrieve process information.
+uint64
+sys_getprocs(void)
+{
+  uint64 addr;
+
+  // Retrieve the user-provided array address.
+  argaddr(0, &addr);
+
+  // Collect process information and return the count.
+  return getprocs(addr);
+}

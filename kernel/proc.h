@@ -1,3 +1,4 @@
+#include "pstat.h"
 // Saved registers for kernel context switches.
 struct context {
   uint64 ra;
@@ -76,7 +77,6 @@ struct trapframe {
   /* 280 */ uint64 t6;
 };
 
-enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
 // Per-process state
 struct proc {
