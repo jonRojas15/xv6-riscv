@@ -29,6 +29,10 @@ int pause(int);
 int uptime(void);
 int sync(void);
 int getprocs(struct pstat *);
+// PA2: Process priority system calls.
+int getpriority(void);
+int setpriority(int priority);
+
 
 // ulib.c
 int stat(const char *, struct stat *);

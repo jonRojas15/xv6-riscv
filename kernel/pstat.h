@@ -16,6 +16,7 @@ struct pstat{
   int pid;
   enum procstate state;
   uint64 size;
+  int priority;  // PA2: Process scheduling priority
   int ppid;
   char name[16];
 };

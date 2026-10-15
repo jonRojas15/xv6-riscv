@@ -126,6 +126,7 @@ found:
   p->pid = allocpid();
   p->state = USED;
   p->cputime = 0;
+  p->priority = 0;  // PA2: Initialize process priority
 
 
   // Allocate a trapframe page.
@@ -277,6 +278,9 @@ kfork(void)
     return -1;
   }
   np->sz = p->sz;
+ 
+  // PA2: Child inherits the parent's priority.
+  np->priority = p->priority;
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
@@ -794,6 +798,7 @@ getprocs(uint64 addr)
       info.pid = p->pid;
       info.state = p->state;
       info.size = p->sz;
+      info.priority = p->priority;
 
       if(p->parent != 0)
         info.ppid = p->parent->pid;

@@ -29,16 +29,16 @@ main(int argc, char **argv)
     }
 
     // Print the process table header.
-    printf("pid\tstate\t\tsize\tppid\tname\n");
-
+    printf("pid\tstate\t\tsize\tpriority\tppid\tname\n");
     // Display information for each process.
     for (i = 0; i < nprocs; i++) {
         state = states[uproc[i].state];
 
-        printf("%d\t%s\t%d\t%d\t%s\n",
+        printf("%d\t%s\t%d\t%d\t\t%d\t%s\n",
                uproc[i].pid,
                state,
                (int)uproc[i].size,
+               uproc[i].priority,
                uproc[i].ppid,
                uproc[i].name);
     }

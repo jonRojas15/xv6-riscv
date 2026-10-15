@@ -135,3 +135,38 @@ sys_getprocs(void)
   // Collect process information and return the count.
   return getprocs(addr);
 }
+
+// PA2: Return the current process priority.
+uint64
+sys_getpriority(void)
+{
+  struct proc *p = myproc();
+  int priority;
+
+  acquire(&p->lock);
+  priority = p->priority;
+  release(&p->lock);
+
+  return priority;
+}
+
+// PA2: Set the current process priority.
+uint64
+sys_setpriority(void)
+{
+  int priority;
+  struct proc *p = myproc();
+
+  // Retrieve the requested priority.
+  argint(0, &priority);
+
+  // Only allow priorities from 0 to 49.
+  if(priority < 0 || priority > 49)
+    return -1;
+
+  acquire(&p->lock);
+  p->priority = priority;
+  release(&p->lock);
+
+  return 0;
+}
