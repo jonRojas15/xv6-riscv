@@ -17,6 +17,7 @@ struct pstat{
   enum procstate state;
   uint64 size;
   int priority;  // PA2: Process scheduling priority
+  uint readytime;  // PA2: Time process entered RUNNABLE
   int ppid;
   char name[16];
 };

@@ -7,6 +7,9 @@
 #include "defs.h"
 #include "pstat.h"
 
+// PA2: Access the system clock tick counter.
+extern uint ticks;
+
 struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
@@ -127,6 +130,7 @@ found:
   p->state = USED;
   p->cputime = 0;
   p->priority = 0;  // PA2: Initialize process priority
+  p->readytime = 0;  // PA2: Initialize ready time
 
 
   // Allocate a trapframe page.
@@ -229,6 +233,8 @@ userinit(void)
 
   p->cwd = namei("/");
 
+  // PA2: Record when the initial process becomes runnable.
+  p->readytime = ticks;
   p->state = RUNNABLE;
 
   release(&p->lock);
@@ -305,8 +311,13 @@ kfork(void)
   release(&wait_lock);
 
   acquire(&np->lock);
+
+  // PA2: Record when the child enters the ready queue.
+  np->readytime = ticks;
   np->state = RUNNABLE;
+
   release(&np->lock);
+
 
   return pid;
 }
@@ -581,7 +592,11 @@ yield(void)
 {
   struct proc *p = myproc();
   acquire(&p->lock);
+
+  // PA2: Reset ready time when the process yields the CPU.
+  p->readytime = ticks;
   p->state = RUNNABLE;
+
   sched();
   release(&p->lock);
 }
@@ -667,6 +682,8 @@ wakeup(void *chan)
       // If this waiting process has gotten so far as to actually
       // go to sleep, also set it back to RUNNING.
       if (p->state == SLEEPING) {
+        // PA2: Record when the sleeping process becomes ready.
+        p->readytime = ticks;
         p->state = RUNNABLE;
       }
     }
@@ -687,6 +704,8 @@ kkill(int pid)
     if (p->pid == pid) {
       p->killed = 1;
       if (p->state == SLEEPING) {
+        // PA2: Record when a killed sleeping process becomes runnable.
+        p->readytime = ticks;
         // Wake process from sleep().
         p->state = RUNNABLE;
       }
@@ -799,6 +818,7 @@ getprocs(uint64 addr)
       info.state = p->state;
       info.size = p->sz;
       info.priority = p->priority;
+      info.readytime = p->readytime;
 
       if(p->parent != 0)
         info.ppid = p->parent->pid;
