@@ -163,6 +163,71 @@ main(void)
       cmd++;
     if (*cmd == '\n') // is a blank command
       continue;
+
+    // PA2 Extra Credit: Display the current shell priority.
+    if (strcmp(cmd, "getpriority\n") == 0) {
+
+        // Get and display the shell's current priority.
+        printf("%d\n", getpriority());
+
+        // Continue without creating a child process.
+        continue;
+    }
+
+    // PA2 Extra Credit: Change the current shell priority.
+    {
+        char *p = cmd;
+        const char *keyword = "setpriority";
+
+        // Check whether the command is setpriority.
+        while (*keyword != 0 && *p == *keyword) {
+            p++;
+            keyword++;
+        }
+
+        if (*keyword == 0 &&
+            (*p == ' ' || *p == '\t' || *p == '\n' || *p == 0)) {
+
+            // Skip spaces before the priority argument.
+            while (*p == ' ' || *p == '\t')
+                p++;
+
+            // Make sure a nonnegative number was provided.
+            if (*p < '0' || *p > '9') {
+                fprintf(2, "Usage: setpriority <0-49>\n");
+                continue;
+            }
+
+            int priority = 0;
+
+            // Convert the priority argument to an integer.
+            while (*p >= '0' && *p <= '9') {
+                priority = priority * 10 + (*p - '0');
+                p++;
+
+                // Stop early if the priority exceeds 49.
+                if (priority > 49)
+                    break;
+            }
+
+            // Skip trailing spaces.
+            while (*p == ' ' || *p == '\t')
+                p++;
+
+            // Validate the priority and command arguments.
+            if (priority > 49 || (*p != '\n' && *p != 0)) {
+                fprintf(2, "setpriority: invalid priority (use 0-49)\n");
+            }
+            else if (setpriority(priority) < 0) {
+                fprintf(2, "setpriority: failed to set priority\n");
+            }
+
+            // Continue without creating a child process.
+            continue;
+        }
+    }
+
+
     if (cmd[0] == 'c' && cmd[1] == 'd' && cmd[2] == ' ') {
       // Chdir must be called by the parent, not the child.
       cmd[strlen(cmd) - 1] = 0; // chop \n
