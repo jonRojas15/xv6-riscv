@@ -533,23 +533,66 @@ scheduler(void)
 
     int found = 0;
 
-    #if SCHED_POLICY == SCHED_PRIORITY
+    #if SCHED_POLICY == SCHED_PRIORITY || SCHED_POLICY == SCHED_AGING
 
-        // PA2 Task 4: Select the highest-priority runnable process.
+        // PA2 Task 5: Select the highest-priority runnable process.
         struct proc *best = 0;
         int highest = -1;
 
-        // Search the process table for the highest priority.
+        #if SCHED_POLICY == SCHED_AGING
+            // Record the current system time.
+            uint now = ticks;
+            uint bestage = 0;
+        #endif
+
+        // Search for the highest-priority runnable process.
         for (p = proc; p < &proc[NPROC]; p++) {
-          acquire(&p->lock);
 
-          if (p->state == RUNNABLE && p->priority > highest) {
-            highest = p->priority;
-            best = p;
-          }
+            acquire(&p->lock);
 
-          release(&p->lock);
+            if (p->state == RUNNABLE) {
+
+                // Start with the process's original priority.
+                int effective = p->priority;
+
+        #if SCHED_POLICY == SCHED_AGING
+
+                // Calculate how long the process has been waiting.
+                uint age = now - p->readytime;
+
+                // Increase effective priority as the process waits.
+                uint bonus = age / AGING_INTERVAL;
+
+                // Maximum effective priority is 99.
+                if (bonus >= (uint)(MAXEFFPRIORITY - effective))
+                    effective = MAXEFFPRIORITY;
+                else
+                    effective += bonus;
+
+                // Prefer higher effective priority.
+                // If tied, prefer the process waiting longer.
+                if (effective > highest ||
+                    (effective == highest && age > bestage)) {
+
+                    highest = effective;
+                    best = p;
+                    bestage = age;
+                }
+
+        #else
+
+                // Task 4: Priority scheduling without aging.
+                if (effective > highest) {
+                    highest = effective;
+                    best = p;
+                }
+
+        #endif
+            }
+
+            release(&p->lock);
         }
+
 
         // Execute the selected process.
         if (best != 0) {

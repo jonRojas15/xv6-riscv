@@ -149,6 +149,7 @@ UPROGS=\
         $U/_prioritytest\
         $U/_pexec\
         $U/_schedtest\
+        $U/_agingtest\
 	$U/_sh\
 	$U/_stressfs\
 	$U/_usertests\
