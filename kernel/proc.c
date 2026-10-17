@@ -532,6 +532,49 @@ scheduler(void)
     intr_off();
 
     int found = 0;
+
+    #if SCHED_POLICY == SCHED_PRIORITY
+
+        // PA2 Task 4: Select the highest-priority runnable process.
+        struct proc *best = 0;
+        int highest = -1;
+
+        // Search the process table for the highest priority.
+        for (p = proc; p < &proc[NPROC]; p++) {
+          acquire(&p->lock);
+
+          if (p->state == RUNNABLE && p->priority > highest) {
+            highest = p->priority;
+            best = p;
+          }
+
+          release(&p->lock);
+        }
+
+        // Execute the selected process.
+        if (best != 0) {
+          acquire(&best->lock);
+
+          // Confirm the selected process is still runnable.
+          if (best->state == RUNNABLE) {
+            best->state = RUNNING;
+            c->proc = best;
+
+            // Switch CPU execution to the selected process.
+            swtch(&c->context, &best->context);
+
+            // Restore scheduler state after the process yields.
+            mycpu()->intena = 0;
+            c->proc = 0;
+            found = 1;
+          }
+
+          release(&best->lock);
+        }
+
+    #else
+
+
     for (p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       if (p->state == RUNNABLE) {
@@ -552,6 +595,8 @@ scheduler(void)
       }
       release(&p->lock);
     }
+
+    #endif
     if (found == 0) {
       // nothing to run; stop running on this core until an interrupt.
       asm volatile("wfi");
